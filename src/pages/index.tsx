@@ -1,118 +1,85 @@
-import Image from 'next/image'
-import { Inter } from 'next/font/google'
+import { useState, ChangeEvent } from 'react';
+import axios from 'axios';
+import Image from 'next/image';
+import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 
-const inter = Inter({ subsets: ['latin'] })
+  export default function Home() {
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [audioSrc, setAudioSrc] = useState<string | null>(null);
+    const [imageSrc, setImageSrc] = useState<string | null>(null);
+    const [isAudio, setIsAudio] = useState<boolean>(false);
+    const [uploadPercentage, setUploadPercentage] = useState<number>(0);
+    const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+  
+    const onFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+      if(event.target.files && event.target.files.length > 0){
+        const file = event.target.files[0];
+        setSelectedFile(file);
+        const url = URL.createObjectURL(file);
+        if(file.type.startsWith("image/")){
+          setIsAudio(false);
+          setImageSrc(url);
+        }else if(file.type.startsWith("audio/")){
+          setIsAudio(true);
+          setAudioSrc(url);
+        }
+      }
+    };
+  
+    const onFileUpload = async () => {
+      if(selectedFile){
+        const formData = new FormData();
+        formData.append("file", selectedFile);
+        const response = await axios.post("http://localhost:12345/convert", formData, {
+          responseType: 'blob',
+          headers: {
+            "Content-Type": "multipart/form-data"
+          }
+        });
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        setDownloadUrl(url);
+      }
+    };
 
-export default function Home() {
   return (
-    <main
-      className={`flex min-h-screen flex-col items-center justify-between p-24 ${inter.className}`}
-    >
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/pages/index.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+    <div className="min-h-screen relative flex flex-col items-center justify-center py-2">
+      <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className="absolute inset-0 z-0">
+        <rect fill="#000" width="100%" height="100%" />
+        <path fill="green" d="M25,100 Q50,200, 75,100 Q100,0, 125,100 Q150,200, 175,100" opacity=".4"/>
+        <path fill="green" d="M35,100 Q60,180, 85,100 Q110,20, 135,100 Q160,180, 185,100" opacity=".5"/>
+        <path fill="green" d="M45,100 Q70,160, 95,100 Q120,40, 145,100 Q170,160, 195,100" opacity=".6"/>
+      </svg>
+      {/* Your application content */}
+      <h2 className="text-3xl font-bold mb-5 text-white z-10">AAVE Client</h2>
+      <div className="flex items-center justify-center z-10">
+        <label className="flex flex-col border-4 border-dashed w-64 h-64 hover:border-blue-400 hover:bg-blue-50 group">
+          <div className="flex flex-col items-center justify-center pt-7">
+            {!isAudio && imageSrc && <Image src={imageSrc} alt="Upload Preview" width={200} height={200} objectFit="cover" />}
+            <h1 className="text-gray-700 mt-20">Click to upload</h1>
+            <input type="file" className="hidden" onChange={onFileChange} />
+          </div>
+        </label>
+      </div>
+      <button onClick={onFileUpload} className="w-64 bg-white tracking-wide text-black font-bold rounded-3xl hover:bg-gray-200 shadow-md py-2 px-6 inline-flex items-center mt-4 z-10">
+        <span className="mx-auto">Upload and Convert</span>
+      </button>
+      {uploadPercentage > 0 &&
+        <div className="mt-4 z-10">
         </div>
-      </div>
-
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700/10 after:dark:from-sky-900 after:dark:via-[#0141ff]/40 before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className="mb-32 grid text-center lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Discover and deploy boilerplate example Next.js&nbsp;projects.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  )
+      }
+      {isAudio && audioSrc &&
+        <audio controls className="mt-4 z-10">
+          <source src={audioSrc} type="audio/wav" />
+          Your browser does not support the audio tag.
+        </audio>
+      }
+        {downloadUrl &&
+        <button className="mt-4 z-10">
+          <a href={downloadUrl} download>
+            Download Converted File
+          </a>
+        </button>
+      }
+    </div>
+  );
 }
